@@ -22,4 +22,11 @@
 *.app
 *.i*86
 *.x86_64
+# AVR
+*.eep
+*.lss
+*.map
+*.d
+*.mk
 *.hex
+makefile
