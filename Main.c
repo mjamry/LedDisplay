@@ -2,7 +2,7 @@
 #include <avr/io.h>
 #include <util/delay.h>
 #define DELAY 100
-#define CHAR_NUMBER 1
+#define CHAR_NUMBER 2
 #define CHAR_LENGTH 8
 
 #define CLK 0x40
@@ -11,7 +11,8 @@
 
 int main(void)
 {
-    uint8_t const charTab[CHAR_NUMBER][CHAR_LENGTH] = {{0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80}};
+    uint8_t const charTab[CHAR_NUMBER][CHAR_LENGTH] = {{0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80},
+    													{0xF8, 0xF4, 0xF2, 0xF1, 0x8F, 0x4F, 0x2F, 0x1F}};
     uint8_t i=0, j=0;
 
     DDRB = 0xFF;
@@ -19,10 +20,11 @@ int main(void)
 
     while(1)
     {
-    	PORTD |= RST;
-    	PORTD &= ~(OUT);
+
         for(i=0;i<CHAR_NUMBER;i++)
         {
+        	PORTD |= RST;
+			PORTD &= ~(OUT);
         	for(j=0;j<CHAR_LENGTH;j++)
         	{
         		PORTD |= CLK;
@@ -32,6 +34,7 @@ int main(void)
 				_delay_us(DELAY);
 				PORTD |= OUT;
         	}
+
         }
     }
 
