@@ -37,6 +37,14 @@ void setUpIO()
     DDRD = 0xFF;
 }
 
+void clockRegisterState()
+{
+	PORTD |= CLK;
+	_delay_us(DELAY);
+	PORTD &= ~(CLK);
+	_delay_us(DELAY);
+}
+
 int main(void)
 {
     uint8_t const charTab[ROWS_NUMBER][CHAR_LENGTH] = {
@@ -64,11 +72,8 @@ int main(void)
 		PORTD &= ~(OUT);
 		for(j=0;j<CHAR_LENGTH;j++)
 		{
-			PORTD |= CLK;
 			PORTB = charTab[INDEX][j];
-			_delay_us(DELAY);
-			PORTD &= ~(CLK);
-			_delay_us(DELAY);
+			clockRegisterState();
 			PORTD |= OUT;
 		}
     }
