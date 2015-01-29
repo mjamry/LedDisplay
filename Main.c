@@ -45,12 +45,12 @@ int main(void)
 
     //set CTC mode
     TCCR1B |= (1<<WGM12);
-    //set prescaler to 1024
-    TCCR1B |= ((1<<CS12) | (1<<CS10));
+    //set prescaler to 64
+    TCCR1B |= ((1<<CS11) | (1<<CS10));
     //set interrupt flag
     TIMSK |= (1<<OCIE1A);
     //set counter value
-    OCR1A = 0x006F;
+    OCR1A = 0x04F0;
     //set global interrupt flag
     sei();
 
