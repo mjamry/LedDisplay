@@ -24,6 +24,23 @@ ISR(TIMER1_COMPA_vect)
 	//_delay_ms(100);
 }
 
+void initialiseTimer_1_B()
+{
+    //set CTC mode
+    TCCR1B |= (1<<WGM12);
+    //set prescaler to 64
+    TCCR1B |= ((1<<CS11) | (1<<CS10));
+    //set interrupt flag
+    TIMSK |= (1<<OCIE1A);
+    //set counter value
+    OCR1A = 0x04F0;
+}
+
+void setUpIO()
+{
+    DDRB = 0xFF;
+    DDRD = 0xFF;
+}
 
 int main(void)
 {
@@ -40,17 +57,8 @@ int main(void)
 
     uint8_t j=0;
 
-    DDRB = 0xFF;
-    DDRD = 0xFF;
-
-    //set CTC mode
-    TCCR1B |= (1<<WGM12);
-    //set prescaler to 64
-    TCCR1B |= ((1<<CS11) | (1<<CS10));
-    //set interrupt flag
-    TIMSK |= (1<<OCIE1A);
-    //set counter value
-    OCR1A = 0x04F0;
+    setUpIO();
+    initialiseTimer_1_B();
     //set global interrupt flag
     sei();
 
