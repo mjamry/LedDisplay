@@ -14,7 +14,7 @@ struct animation
 
 struct animationData
 {
-	char data[ROWS_NUMBER];
+	char data[CHARS_NUMBER];
 };
 
 #endif /* MEMORYDATA_H_ */
