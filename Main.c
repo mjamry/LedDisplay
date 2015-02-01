@@ -3,13 +3,8 @@
 #include <util/delay.h>
 #include <avr/interrupt.h>
 
-#define DELAY 100
-#define CHAR_NUMBER 8
-#define CHAR_LENGTH 8
-
-#define CLK 0x40
-#define OUT 0x20
-#define RST 0x10
+#include "Const.h"
+#include "MemoryData.h"
 
 uint8_t INDEX = 0;
 
@@ -17,7 +12,7 @@ ISR(TIMER1_COMPA_vect)
 {
 	PORTD |= 0x04;
 	INDEX++;
-	if(INDEX >= CHAR_LENGTH)
+	if(INDEX >= ROWS_NUMBER)
 	{
 		INDEX = 0;
 	}
@@ -42,9 +37,17 @@ void setUpIO()
     DDRD = 0xFF;
 }
 
+void clockRegisterState()
+{
+	PORTD |= CLK;
+	_delay_us(DELAY);
+	PORTD &= ~(CLK);
+	_delay_us(DELAY);
+}
+
 int main(void)
 {
-    uint8_t const charTab[CHAR_NUMBER][CHAR_LENGTH] = {
+    uint8_t const charTab[ROWS_NUMBER][CHAR_LENGTH] = {
     		{0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
     		{0x00, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
     		{0x00, 0x00, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00},
@@ -69,11 +72,8 @@ int main(void)
 		PORTD &= ~(OUT);
 		for(j=0;j<CHAR_LENGTH;j++)
 		{
-			PORTD |= CLK;
 			PORTB = charTab[INDEX][j];
-			_delay_us(DELAY);
-			PORTD &= ~(CLK);
-			_delay_us(DELAY);
+			clockRegisterState();
 			PORTD |= OUT;
 		}
     }
