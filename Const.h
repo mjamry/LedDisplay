@@ -3,7 +3,7 @@
 #define CONS_H_
 
 #define DELAY 100
-#define ROWS_NUMBER 8
+#define ROWS_NUMBER 1
 #define CHAR_LENGTH 8
 
 #define CLK 0x40

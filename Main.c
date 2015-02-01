@@ -45,18 +45,36 @@ void clockRegisterState()
 	_delay_us(DELAY);
 }
 
+uint8_t resizeDataArray(uint8_t input[], uint8_t inputLength, uint8_t output[])
+{
+	uint8_t i=0;
+	uint8_t fillData = 0x00;
+	if(inputLength < CHAR_LENGTH)
+	{
+		uint8_t rightSize = (CHAR_LENGTH - inputLength)/2;
+		//if array length is odd left side will have one element more than right
+		uint8_t leftSize = rightSize + (CHAR_LENGTH - inputLength)%2;
+		//fill right side
+		for(i=0;i<rightSize;i++)
+		{
+			output[i] = fillData;
+		}
+		//add data in the middle
+		for(i=rightSize;i<rightSize + inputLength;i++)
+		{
+			output[i] = input[i-rightSize];
+		}
+		//fill left side
+		for(i=rightSize+inputLength;i<rightSize+inputLength+leftSize;i++)
+		{
+			output[i] = fillData;
+		}
+	}
+}
+
 int main(void)
 {
-    uint8_t const charTab[ROWS_NUMBER][CHAR_LENGTH] = {
-    		{0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
-    		{0x00, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
-    		{0x00, 0x00, 0xFF, 0x00, 0x00, 0x00, 0x00, 0x00},
-    		{0x00, 0x00, 0x00, 0xFF, 0x00, 0x00, 0x00, 0x00},
-    		{0x00, 0x00, 0x00, 0x00, 0xFF, 0x00, 0x00, 0x00},
-    		{0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0x00, 0x00},
-    		{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF, 0x00},
-    		{0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xFF}
-    };
+    uint8_t const memoryData[CHAR_LENGTH] = {0xAA, 0x77};
 
     uint8_t j=0;
 
@@ -72,7 +90,9 @@ int main(void)
 		PORTD &= ~(OUT);
 		for(j=0;j<CHAR_LENGTH;j++)
 		{
-			PORTB = charTab[INDEX][j];
+			uint8_t output[CHAR_LENGTH];
+			resizeDataArray(memoryData, 2, output);
+			PORTB = output[j];
 			clockRegisterState();
 			PORTD |= OUT;
 		}
