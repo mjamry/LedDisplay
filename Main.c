@@ -8,7 +8,7 @@
 
 uint16_t memoryPointer = 0;
 uint8_t dataToDisplay[CHAR_LENGTH];
-uint8_t memoryData[CHARS_NUMBER] = {0xAA, 0x77, '\0', 0xFF, 0x11, '\0', 0xAA};
+uint8_t memoryData[CHARS_NUMBER] = {0xFF, 0xFF, '\0', 0xFF, 0xFF, '\0', 0xFF};
 
 void initialiseTimer_1_B()
 {
@@ -30,6 +30,7 @@ void setUpIO()
 
 void clockRegisterState()
 {
+
 	PORTD |= CLK;
 	_delay_us(DELAY);
 	PORTD &= ~(CLK);
@@ -87,6 +88,44 @@ ISR(TIMER1_COMPA_vect)
 	readDataFromMemory(memoryData, dataToDisplay);
 }
 
+void putOutRowData(uint8_t data)
+{
+	uint8_t i=0;
+	uint8_t temp = 0;
+
+	PORTB |= (_ROW_OUTPUT_ENABLE);
+
+
+	_delay_us(10);
+	PORTB  |= (_ROW_CLR);
+	for(i=0;i<8;i++)
+	{
+		temp = data & 0x80;
+		if(temp)
+		{
+			PORTB |= (1<<PB0);
+		}
+		else
+		{
+			PORTB &= ~(1<<PB0);
+		}
+
+		//PORTB |= (ROW_DATA);
+		data = data << 1;
+
+		PORTB |= (ROW_SERIAL_CLK);
+		_delay_us(DELAY);
+		PORTB &= ~(ROW_SERIAL_CLK);
+		_delay_us(DELAY);
+	}
+
+	PORTB |= ROW_LATCH;
+	_delay_us(DELAY);
+	PORTB &= ~(ROW_LATCH);
+	_delay_us(DELAY);
+	PORTB &= ~(_ROW_OUTPUT_ENABLE);
+}
+
 int main(void)
 {
 
@@ -103,9 +142,9 @@ int main(void)
     	PORTD &= ~(0x04);
 		PORTD |= RST;
 		PORTD &= ~(OUT);
-		for(j=0;j<CHAR_LENGTH;j++)
+		for(j=0;j<8;j++)
 		{
-			PORTB = dataToDisplay[j];
+			putOutRowData(0xAA);
 			clockRegisterState();
 			PORTD |= OUT;
 		}
