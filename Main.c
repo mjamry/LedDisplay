@@ -8,7 +8,7 @@
 
 uint16_t memoryPointer = 0;
 uint8_t dataToDisplay[CHAR_LENGTH];
-uint8_t memoryData[MATRIX_LENGTH] = {0xFF, 0xFF, 0xFF, 0xFa, 0xFa, 0xFa, 0xFa, 0xFF,
+uint8_t memoryData[MATRIX_LENGTH] = {1,2,3,4,5,6,7,8,
 									0x81, 0x82, 0x84, 0x88, 0x88, 0x84, 0x82, 0x81,
 									0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80};
 
@@ -22,6 +22,14 @@ void initialiseTimer_1_B()
     TIMSK |= (1<<OCIE1A);
     //set counter value
     OCR1A = 0x04F0;
+}
+
+void initialiseInt_1()
+{
+	//enable INT1
+	GIMSK |= (1<<INT1);
+	//The falling edge of INT1 generates an interrupt request
+	MCUCR |= (1<<ISC11);
 }
 
 void setUpIO()
@@ -90,6 +98,15 @@ ISR(TIMER1_COMPA_vect)
 	readDataFromMemory(memoryData, dataToDisplay);
 }
 
+ISR(INT1_vect)
+{
+	memoryPointer++;
+	if(memoryPointer > CHARS_NUMBER)
+		{
+			memoryPointer = 0;
+		}
+}
+
 void putOutRowData(uint8_t data)
 {
 	uint8_t i=0;
@@ -137,7 +154,7 @@ int main(void)
 		PORTD &= ~(OUT);
 		for(j=0;j<24;j++)
 		{
-			putOutRowData(memoryData[j]);
+			putOutRowData(memoryData[memoryPointer]);
 			clockRegisterState();
 			PORTD |= OUT;
 		}
