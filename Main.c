@@ -8,7 +8,9 @@
 
 uint16_t memoryPointer = 0;
 uint8_t dataToDisplay[CHAR_LENGTH];
-uint8_t memoryData[CHARS_NUMBER] = {0xFF, 0xFF, '\0', 0xFF, 0xFF, '\0', 0xFF};
+uint8_t memoryData[MATRIX_LENGTH] = {0xFF, 0xFF, 0xFF, 0xFa, 0xFa, 0xFa, 0xFa, 0xFF,
+									0x81, 0x82, 0x84, 0x88, 0x88, 0x84, 0x82, 0x81,
+									0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80};
 
 void initialiseTimer_1_B()
 {
@@ -32,9 +34,9 @@ void clockRegisterState()
 {
 
 	PORTD |= CLK;
-	_delay_us(DELAY);
+	_delay_us(DELAY_COL);
 	PORTD &= ~(CLK);
-	_delay_us(DELAY);
+	_delay_us(DELAY_COL);
 }
 
 void resizeDataArray(uint8_t input[], uint8_t inputLength, uint8_t output[])
@@ -93,42 +95,33 @@ void putOutRowData(uint8_t data)
 	uint8_t i=0;
 	uint8_t temp = 0;
 
-	PORTB |= (_ROW_OUTPUT_ENABLE);
-
-
-	_delay_us(10);
-	PORTB  |= (_ROW_CLR);
 	for(i=0;i<8;i++)
 	{
 		temp = data & 0x80;
 		if(temp)
 		{
-			PORTB |= (1<<PB0);
+			PORTB |= (1<<PB7);
 		}
 		else
 		{
-			PORTB &= ~(1<<PB0);
+			PORTB &= ~(1<<PB7);
 		}
 
-		//PORTB |= (ROW_DATA);
 		data = data << 1;
 
-		PORTB |= (ROW_SERIAL_CLK);
-		_delay_us(DELAY);
 		PORTB &= ~(ROW_SERIAL_CLK);
-		_delay_us(DELAY);
+		_delay_us(DELAY_ROW);
+		PORTB |= (ROW_SERIAL_CLK);
 	}
 
-	PORTB |= ROW_LATCH;
-	_delay_us(DELAY);
 	PORTB &= ~(ROW_LATCH);
-	_delay_us(DELAY);
-	PORTB &= ~(_ROW_OUTPUT_ENABLE);
+	_delay_us(DELAY_ROW);
+	PORTB |= ROW_LATCH;
 }
 
 int main(void)
 {
-
+	//_delay_ms(500);
     uint8_t j=0;
     memoryPointer = 0;
 
@@ -139,12 +132,12 @@ int main(void)
 
     while(1)
     {
-    	PORTD &= ~(0x04);
+    	//PORTD &= ~(0x04);
 		PORTD |= RST;
 		PORTD &= ~(OUT);
-		for(j=0;j<8;j++)
+		for(j=0;j<24;j++)
 		{
-			putOutRowData(0xAA);
+			putOutRowData(memoryData[j]);
 			clockRegisterState();
 			PORTD |= OUT;
 		}
