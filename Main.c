@@ -7,10 +7,25 @@
 #include "MemoryData.h"
 
 uint16_t memoryPointer = 0;
+bool btnPressed = false;
 uint8_t dataToDisplay[CHAR_LENGTH];
-uint8_t memoryData[MATRIX_LENGTH] = {1,2,3,4,5,6,7,8,
-									0x81, 0x82, 0x84, 0x88, 0x88, 0x84, 0x82, 0x81,
-									0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80};
+uint8_t GRAPHICS[MATRIX_LENGTH*NUMBER_OF_GRAPHICS] = {
+									0x80, 0x5C, 0xB6, 0x5F, 0x5F, 0xB6, 0x5C, 0x80,
+									0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01,
+									0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01,
+									//second graphic
+									0x02, 0x02 ,0x02 ,0x02 ,0x02 ,0x02 ,0x02 ,0x02,
+									0x98, 0x5C, 0xB6, 0x5F, 0x5F, 0xB6, 0x5C, 0x98,
+									0x02, 0x02 ,0x02 ,0x02 ,0x02 ,0x02 ,0x02 ,0x02,
+									//third graphics
+									0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04,
+									0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04,
+									0x38, 0x1D, 0x76, 0x9C, 0x9C, 0x76, 0x1D, 0x38,
+									//fourth graphics
+									0x78, 0x3D, 0x76, 0xBC, 0xBC, 0x76, 0x3D, 0x78,
+									0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08,
+									0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08
+									};
 
 void initialiseTimer_1_B()
 {
@@ -29,13 +44,15 @@ void initialiseInt_1()
 	//enable INT1
 	GIMSK |= (1<<INT1);
 	//The falling edge of INT1 generates an interrupt request
-	MCUCR |= (1<<ISC11);
+	MCUCR |= (1<<ISC11) | (1<<ISC10);
+	//enable pull up resistor
+	PORTD |= (1<<PD3);
 }
 
 void setUpIO()
 {
     DDRB = 0xFF;
-    DDRD = 0xFF;
+    DDRD = 0xF7;
 }
 
 void clockRegisterState()
@@ -91,20 +108,16 @@ void readDataFromMemory(uint8_t memory[], uint8_t output[])
 
 ISR(TIMER1_COMPA_vect)
 {
-	if(memoryPointer > CHARS_NUMBER)
-	{
-		memoryPointer = 0;
-	}
-	readDataFromMemory(memoryData, dataToDisplay);
+//	if(memoryPointer > CHARS_NUMBER)
+//	{
+//		memoryPointer = 0;
+//	}
+//	readDataFromMemory(memoryData, dataToDisplay);
 }
 
 ISR(INT1_vect)
 {
-	memoryPointer++;
-	if(memoryPointer > CHARS_NUMBER)
-		{
-			memoryPointer = 0;
-		}
+	btnPressed = true;
 }
 
 void putOutRowData(uint8_t data)
@@ -140,10 +153,12 @@ int main(void)
 {
 	//_delay_ms(500);
     uint8_t j=0;
-    memoryPointer = 0;
+    //memoryPointer = 10;
+
 
     setUpIO();
     initialiseTimer_1_B();
+    initialiseInt_1();
     //set global interrupt flag
     sei();
 
@@ -152,9 +167,19 @@ int main(void)
     	//PORTD &= ~(0x04);
 		PORTD |= RST;
 		PORTD &= ~(OUT);
-		for(j=0;j<24;j++)
+		if(btnPressed)
 		{
-			putOutRowData(memoryData[memoryPointer]);
+			memoryPointer++;
+			if(memoryPointer == NUMBER_OF_GRAPHICS)
+			{
+				memoryPointer = 0;
+			}
+
+			btnPressed = false;
+		}
+		for(j=0;j<MATRIX_LENGTH;j++)
+		{
+			putOutRowData(GRAPHICS[memoryPointer*MATRIX_LENGTH+j]);
 			clockRegisterState();
 			PORTD |= OUT;
 		}
