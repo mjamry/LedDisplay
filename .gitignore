@@ -30,3 +30,5 @@
 *.mk
 *.hex
 makefile
+# Eclipse
+../.settings/de.innot.avreclipse.core.prefs
