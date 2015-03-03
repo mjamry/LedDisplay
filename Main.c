@@ -7,10 +7,8 @@
 #include "MemoryData.h"
 
 uint16_t memoryPointer = 0;
+bool btnPressed = false;
 uint8_t dataToDisplay[CHAR_LENGTH];
-uint8_t memoryData[MATRIX_LENGTH] = {0xFF, 0xFF, 0xFF, 0xFa, 0xFa, 0xFa, 0xFa, 0xFF,
-									0x81, 0x82, 0x84, 0x88, 0x88, 0x84, 0x82, 0x81,
-									0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80};
 
 void initialiseTimer_1_B()
 {
@@ -24,21 +22,32 @@ void initialiseTimer_1_B()
     OCR1A = 0x04F0;
 }
 
+void initialiseInt_1()
+{
+	//enable INT1
+	GIMSK |= (1<<INT1);
+	//The falling edge of INT1 generates an interrupt request
+	MCUCR |= (1<<ISC11) | (1<<ISC10);
+	//enable pull up resistor
+	PORTD |= (1<<PD3);
+}
+
 void setUpIO()
 {
     DDRB = 0xFF;
-    DDRD = 0xFF;
+    DDRD = 0xF7;
 }
 
+//clocks column clock
 void clockRegisterState()
 {
-
 	PORTD |= CLK;
 	_delay_us(DELAY_COL);
 	PORTD &= ~(CLK);
 	_delay_us(DELAY_COL);
 }
 
+//put data in the middle, and fill rest with empty space (LEDs turned off)
 void resizeDataArray(uint8_t input[], uint8_t inputLength, uint8_t output[])
 {
 	uint8_t i=0;
@@ -66,6 +75,8 @@ void resizeDataArray(uint8_t input[], uint8_t inputLength, uint8_t output[])
 	}
 }
 
+//reads data from the memory using pointer.
+//pointer is incremented after reading data.
 void readDataFromMemory(uint8_t memory[], uint8_t output[])
 {
 	uint8_t i=0;
@@ -81,13 +92,16 @@ void readDataFromMemory(uint8_t memory[], uint8_t output[])
 	resizeDataArray(memoryData, i, output);
 }
 
+//timer interrupt handler
 ISR(TIMER1_COMPA_vect)
 {
-	if(memoryPointer > CHARS_NUMBER)
-	{
-		memoryPointer = 0;
-	}
-	readDataFromMemory(memoryData, dataToDisplay);
+	//at the moment does nothing
+}
+
+//external interrupt handler
+ISR(INT1_vect)
+{
+	btnPressed = true;
 }
 
 void putOutRowData(uint8_t data)
@@ -121,23 +135,33 @@ void putOutRowData(uint8_t data)
 
 int main(void)
 {
-	//_delay_ms(500);
     uint8_t j=0;
-    memoryPointer = 0;
 
     setUpIO();
     initialiseTimer_1_B();
+    initialiseInt_1();
     //set global interrupt flag
     sei();
 
     while(1)
     {
-    	//PORTD &= ~(0x04);
 		PORTD |= RST;
+		//puts 0 to the output which will selects current column
 		PORTD &= ~(OUT);
-		for(j=0;j<24;j++)
+		//handle button pressed
+		if(btnPressed)
 		{
-			putOutRowData(memoryData[j]);
+			memoryPointer++;
+			if(memoryPointer == NUMBER_OF_GRAPHICS)
+			{
+				memoryPointer = 0;
+			}
+
+			btnPressed = false;
+		}
+		for(j=0;j<MATRIX_LENGTH;j++)
+		{
+			putOutRowData(GRAPHICS[memoryPointer*MATRIX_LENGTH+j]);
 			clockRegisterState();
 			PORTD |= OUT;
 		}
