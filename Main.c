@@ -9,23 +9,6 @@
 uint16_t memoryPointer = 0;
 bool btnPressed = false;
 uint8_t dataToDisplay[CHAR_LENGTH];
-uint8_t GRAPHICS[MATRIX_LENGTH*NUMBER_OF_GRAPHICS] = {
-									0x80, 0x5C, 0xB6, 0x5F, 0x5F, 0xB6, 0x5C, 0x80,
-									0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01,
-									0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01, 0x01,
-									//second graphic
-									0x02, 0x02 ,0x02 ,0x02 ,0x02 ,0x02 ,0x02 ,0x02,
-									0x98, 0x5C, 0xB6, 0x5F, 0x5F, 0xB6, 0x5C, 0x98,
-									0x02, 0x02 ,0x02 ,0x02 ,0x02 ,0x02 ,0x02 ,0x02,
-									//third graphics
-									0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04,
-									0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04, 0x04,
-									0x38, 0x1D, 0x76, 0x9C, 0x9C, 0x76, 0x1D, 0x38,
-									//fourth graphics
-									0x78, 0x3D, 0x76, 0xBC, 0xBC, 0x76, 0x3D, 0x78,
-									0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08,
-									0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08, 0x08
-									};
 
 void initialiseTimer_1_B()
 {
@@ -55,15 +38,16 @@ void setUpIO()
     DDRD = 0xF7;
 }
 
+//clocks column clock
 void clockRegisterState()
 {
-
 	PORTD |= CLK;
 	_delay_us(DELAY_COL);
 	PORTD &= ~(CLK);
 	_delay_us(DELAY_COL);
 }
 
+//put data in the middle, and fill rest with empty space (LEDs turned off)
 void resizeDataArray(uint8_t input[], uint8_t inputLength, uint8_t output[])
 {
 	uint8_t i=0;
@@ -91,6 +75,8 @@ void resizeDataArray(uint8_t input[], uint8_t inputLength, uint8_t output[])
 	}
 }
 
+//reads data from the memory using pointer.
+//pointer is incremented after reading data.
 void readDataFromMemory(uint8_t memory[], uint8_t output[])
 {
 	uint8_t i=0;
@@ -106,15 +92,13 @@ void readDataFromMemory(uint8_t memory[], uint8_t output[])
 	resizeDataArray(memoryData, i, output);
 }
 
+//timer interrupt handler
 ISR(TIMER1_COMPA_vect)
 {
-//	if(memoryPointer > CHARS_NUMBER)
-//	{
-//		memoryPointer = 0;
-//	}
-//	readDataFromMemory(memoryData, dataToDisplay);
+	//at the moment does nothing
 }
 
+//external interrupt handler
 ISR(INT1_vect)
 {
 	btnPressed = true;
@@ -151,10 +135,7 @@ void putOutRowData(uint8_t data)
 
 int main(void)
 {
-	//_delay_ms(500);
     uint8_t j=0;
-    //memoryPointer = 10;
-
 
     setUpIO();
     initialiseTimer_1_B();
@@ -164,9 +145,10 @@ int main(void)
 
     while(1)
     {
-    	//PORTD &= ~(0x04);
 		PORTD |= RST;
+		//puts 0 to the output which will selects current column
 		PORTD &= ~(OUT);
+		//handle button pressed
 		if(btnPressed)
 		{
 			memoryPointer++;
